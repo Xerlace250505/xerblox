@@ -44,7 +44,7 @@ export const AppConfigSchema = Schema.mutable(
     notificationKinds: Schema.NullOr(NotificationKindsSchema),
     notificationSound: Schema.Boolean,
     notificationsOffered: Schema.Boolean,
-    // What the user wrote in Settings; null follows BloxBot's default as it changes.
+    // What the user wrote in Settings; null follows XerBlox's default as it changes.
     systemPrompt: Schema.NullOr(Schema.String),
     promptsSent: Schema.Number,
     starCalloutShown: Schema.Boolean,
@@ -112,7 +112,7 @@ export const UpdateInfoSchema = Schema.mutable(
 export type UpdateInfo = typeof UpdateInfoSchema.Type;
 
 /**
- * Whether BloxBot could start Roblox Studio's MCP helper. `not_installed` means the helper
+ * Whether XerBlox could start Roblox Studio's MCP helper. `not_installed` means the helper
  * isn't on this computer, `unavailable` means it started but closed before it connected.
  */
 export const StudioMcpStatusSchema = Schema.Struct({
@@ -156,16 +156,18 @@ export interface DesktopApi {
   onOpenCodeStartupProgress(listener: (progress: OpenCodeStartupProgress) => void): () => void;
   getVersion(): Promise<string>;
   getInstructionFiles(): Promise<readonly InstructionFile[]>;
-  /** BloxBot's AGENTS.md, which is empty until the user writes something. */
+  /** XerBlox's AGENTS.md, which is empty until the user writes something. */
   readInstructions(): Promise<string>;
   saveInstructions(text: string): Promise<void>;
   openUrl(url: string): Promise<void>;
   showSystemNotification(notification: SystemNotification): Promise<boolean>;
   onSystemNotificationClick(listener: (id: string) => void): () => void;
-  /** Opens the page where the system lets people allow BloxBot's notifications. */
+  /** Opens the page where the system lets people allow XerBlox's notifications. */
   openNotificationSettings(): Promise<void>;
   loadConfig(): Promise<AppConfig>;
   patchConfig(patch: Partial<AppConfig>): Promise<void>;
+  /** Merges a patch into OpenCode's opencode.json config file (for custom providers). */
+  patchOpenCodeConfig(patch: Record<string, unknown>): Promise<void>;
   setSystemPrompt(systemPrompt: string | null): Promise<void>;
   checkForUpdate(): Promise<UpdateInfo | null>;
   installUpdate(): Promise<void>;

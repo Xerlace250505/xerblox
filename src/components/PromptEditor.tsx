@@ -530,7 +530,7 @@ export default forwardRef<PromptEditorHandle, PromptEditorProps>(function Prompt
   return (
     <LexicalComposer
       initialConfig={{
-        namespace: "BloxBotPrompt",
+        namespace: "XerBloxPrompt",
         nodes: [PromptTokenNode],
         onError: (error) => {
           throw error;

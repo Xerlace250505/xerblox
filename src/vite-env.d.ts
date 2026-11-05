@@ -12,6 +12,6 @@ declare global {
   }
 
   interface Window {
-    bloxbot?: DesktopApi;
+    xerblox?: DesktopApi;
   }
 }

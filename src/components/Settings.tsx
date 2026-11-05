@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, ChevronRight, FileText, Globe, Search, Shield } from "lucide-react";
 import posthog from "posthog-js/dist/module.full.no-external.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import CustomProviderDialog from "@/components/CustomProviderDialog";
 import ProviderCheckPopover from "@/components/ProviderCheckPopover";
 import ProviderConnectDialog from "@/components/ProviderConnectDialog";
 import ProviderLogo from "@/components/ProviderLogo";
@@ -50,12 +51,12 @@ const POPULAR_PROVIDERS = [
 /** OpenCode Zen with only the built-in free models. */
 const isFreeZen = isFreeTier;
 
-/** OpenCode Zen with a key added in BloxBot, which falls back to the free models when removed. */
+/** OpenCode Zen with a key added in XerBlox, which falls back to the free models when removed. */
 function hasZenKey(provider: ProviderInfo): boolean {
   return provider.id === "opencode" && provider.source === "api";
 }
 
-/** OpenCode Zen with a key from the environment or config, which BloxBot can't remove. */
+/** OpenCode Zen with a key from the environment or config, which XerBlox can't remove. */
 function hasOutsideZenKey(provider: ProviderInfo): boolean {
   return provider.id === "opencode" && !isFreeZen(provider) && !hasZenKey(provider);
 }
@@ -290,12 +291,14 @@ function Settings({ onClose }: SettingsProps) {
 // ═══════════════════════════════════════════════════════════════════════
 
 function ProvidersTab() {
+  const queryClient = useQueryClient();
   const allProviders = useAllProviders();
   const connectedProviders = useConnectedProviders();
   const authMethods = useAuthMethods();
   const disconnectMutation = useDisconnectProvider();
 
   const [connecting, setConnecting] = useState<ProviderInfo | null>(null);
+  const [showCustomProvider, setShowCustomProvider] = useState(false);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [checks, setChecks] = useState<Record<string, "checking" | ProviderCheckResult>>({});
@@ -346,7 +349,7 @@ function ProvidersTab() {
       } catch {
         result = {
           ok: false,
-          message: "BloxBot couldn't run the check. Try again.",
+          message: "XerBlox couldn't run the check. Try again.",
           keyRejected: false,
           modelName: model.name,
         };
@@ -464,9 +467,15 @@ function ProvidersTab() {
           </div>
         </div>
         <button
-          onClick={() =>
-            provider.id === OPENCODE_GO.providerId ? setUpGo("list") : setConnecting(provider)
-          }
+          onClick={() => {
+            if (provider.id === "__custom__") {
+              setShowCustomProvider(true);
+            } else if (provider.id === OPENCODE_GO.providerId) {
+              setUpGo("list");
+            } else {
+              setConnecting(provider);
+            }
+          }}
           className="shrink-0 whitespace-nowrap rounded-md bg-secondary px-3 py-1 text-xs font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           Connect
@@ -477,7 +486,16 @@ function ProvidersTab() {
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-6 @xl:px-6 @xl:py-8">
-      <h4 className="text-lg font-medium text-foreground">Providers</h4>
+      <div className="flex items-center justify-between">
+        <h4 className="text-lg font-medium text-foreground">Providers</h4>
+        <button
+          type="button"
+          onClick={() => setShowCustomProvider(true)}
+          className="shrink-0 rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          + Add Custom Endpoint
+        </button>
+      </div>
 
       {allProviders.length > 0 && (
         <div className="relative mt-5">
@@ -709,11 +727,21 @@ function ProvidersTab() {
         </div>
       )}
 
-      {connecting && (
+      {connecting && connecting.id !== "__custom__" && (
         <ProviderConnectDialog
           provider={connecting}
           onClose={() => setConnecting(null)}
           onConnected={handleConnected}
+        />
+      )}
+
+      {showCustomProvider && (
+        <CustomProviderDialog
+          onClose={() => setShowCustomProvider(false)}
+          onAdded={() => {
+            setShowCustomProvider(false);
+            queryClient.invalidateQueries({ queryKey: qk.providers });
+          }}
         />
       )}
     </div>
@@ -816,7 +844,7 @@ function InstructionsTab() {
     <div className="mx-auto w-full max-w-md px-4 py-6 @xl:px-6 @xl:py-8">
       <h4 className="text-lg font-medium text-foreground">Instructions</h4>
       <p className="mt-1 text-xs text-muted-foreground">
-        What BloxBot should always keep in mind, in every chat.
+        What XerBlox should always keep in mind, in every chat.
       </p>
 
       <textarea
@@ -903,7 +931,7 @@ function SystemPromptSection({ chatRunning }: { chatRunning: boolean }) {
       {open && (
         <>
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
-            Not recommended. BloxBot can get worse at Studio work, and your next message costs more
+            Not recommended. XerBlox can get worse at Studio work, and your next message costs more
             because the AI has to rebuild its cache. Use Instructions instead.
           </p>
 
@@ -988,7 +1016,7 @@ function NotificationsTab() {
     <div className="mx-auto w-full max-w-md px-4 py-6 @xl:px-6 @xl:py-8">
       <h4 className="text-lg font-medium text-foreground">Notifications</h4>
       <p className="mt-1 text-xs text-muted-foreground">
-        Sent while BloxBot isn't the app in front.
+        Sent while XerBlox isn't the app in front.
       </p>
 
       <div className="mt-6">
@@ -1058,7 +1086,7 @@ function PrivacyTab() {
       <h4 className="text-lg font-medium text-foreground">Privacy</h4>
       <p className="mt-1 text-xs text-muted-foreground">
         We use app usage and error reports, not linked to your name, to fix bugs and improve
-        BloxBot.
+        XerBlox.
       </p>
 
       <div className="mt-6 rounded-lg border bg-card p-3.5">
@@ -1098,8 +1126,8 @@ function PrivacyTab() {
   );
 }
 
-const PRIVACY_POLICY_URL = "https://bloxbot.ai/privacy";
-const TERMS_URL = "https://bloxbot.ai/terms";
+const PRIVACY_POLICY_URL = "https://xerblox.ai/privacy";
+const TERMS_URL = "https://xerblox.ai/terms";
 
 function PrivacyDetails() {
   const deviceId = analyticsDeviceId();
@@ -1133,7 +1161,7 @@ function PrivacyDetails() {
       )}
       <p>
         To access or delete your data, email{" "}
-        <span className="select-text text-foreground">support@bloxbot.ai</span>
+        <span className="select-text text-foreground">support@xerblox.ai</span>
         {deviceId ? " with this ID." : "."}
       </p>
       <div className="flex gap-3">
@@ -1214,7 +1242,7 @@ function AboutTab({ appVersion }: { appVersion: string | null }) {
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-6 @xl:px-6 @xl:py-8">
-      <h4 className="text-lg font-medium text-foreground">About BloxBot</h4>
+      <h4 className="text-lg font-medium text-foreground">About XerBlox</h4>
 
       {/* Version & update check */}
       <div className="mt-6">
@@ -1223,7 +1251,7 @@ function AboutTab({ appVersion }: { appVersion: string | null }) {
           <div className="flex items-center justify-between">
             <div>
               <span className="text-sm font-medium">
-                BloxBot{appVersion && <span> v{appVersion}</span>}
+                XerBlox{appVersion && <span> v{appVersion}</span>}
               </span>
             </div>
             {updateStatus === "idle" && (
@@ -1370,7 +1398,7 @@ function AboutTab({ appVersion }: { appVersion: string | null }) {
         <div className="mb-1.5 text-xs font-medium text-muted-foreground">Links</div>
         <div className="space-y-1.5">
           <a
-            href={appLink("https://bloxbot.ai", "about")}
+            href={appLink("https://xerblox.ai", "about")}
             target="_blank"
             rel="noreferrer"
             className="flex h-9 w-full items-center gap-2 rounded-lg border bg-card px-3.5 text-xs transition-colors hover:bg-accent"
@@ -1392,7 +1420,7 @@ function AboutTab({ appVersion }: { appVersion: string | null }) {
             Website
           </a>
           <a
-            href="https://github.com/paralov/app-bloxbot-ai"
+            href="https://github.com/xerlace/xerblox"
             target="_blank"
             rel="noreferrer"
             className="flex h-9 w-full items-center gap-2 rounded-lg border bg-card px-3.5 text-xs transition-colors hover:bg-accent"

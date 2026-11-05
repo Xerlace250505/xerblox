@@ -44,7 +44,7 @@ export function studioMcpInstallPath(
 }
 
 /**
- * Keeps other setups out of BloxBot. OpenCode would otherwise walk up from ~/BloxBot and load
+ * Keeps other setups out of XerBlox. OpenCode would otherwise walk up from ~/XerBlox and load
  * ~/AGENTS.md, ~/opencode.json and ~/.opencode, which belong to the user's own OpenCode.
  */
 export const OPENCODE_ISOLATION_ENV = { OPENCODE_DISABLE_PROJECT_CONFIG: "1" };

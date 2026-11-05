@@ -576,7 +576,7 @@ function attributesFromInspect(attributes: unknown) {
   );
 }
 
-const HISTORY_STATE_PATH = "CoreGui.BloxBotHistoryState";
+const HISTORY_STATE_PATH = "CoreGui.XerBloxHistoryState";
 const HISTORY_STATE_MAX_AGE_SECONDS = 5;
 
 // Says whether Studio has anything to redo and counts changes to the tree, where inspect_instance
@@ -584,14 +584,14 @@ const HISTORY_STATE_MAX_AGE_SECONDS = 5;
 // and doesn't touch undo history.
 const WATCH_HISTORY_LUAU = `local CoreGui = game:GetService("CoreGui")
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
-local previous = CoreGui:FindFirstChild("BloxBotHistoryState")
+local previous = CoreGui:FindFirstChild("XerBloxHistoryState")
 if previous then previous:Destroy() end
 local state = Instance.new("StringValue")
-state.Name = "BloxBotHistoryState"
+state.Name = "XerBloxHistoryState"
 state.Archivable = false
 state.Parent = CoreGui
-local generation = (_G.__bloxbotHistoryWatch or 0) + 1
-_G.__bloxbotHistoryWatch = generation
+local generation = (_G.__xerbloxHistoryWatch or 0) + 1
+_G.__xerbloxHistoryWatch = generation
 local visible = { ${[...VISIBLE_SERVICES].map((name) => `${name} = true`).join(", ")} }
 local treeVersion = 0
 local function noteChange(instance)
@@ -607,7 +607,7 @@ local connections = {
   end),
 }
 task.spawn(function()
-  while state.Parent and _G.__bloxbotHistoryWatch == generation do
+  while state.Parent and _G.__xerbloxHistoryWatch == generation do
     state.Value = tostring(ChangeHistoryService:GetCanRedo()) .. " " .. os.time() .. " " .. treeVersion
     task.wait(0.2)
   end
@@ -693,7 +693,7 @@ export async function inspectExplorerNode(
   let limited: "redo" | "failed" = "redo";
   if (redo !== "can-redo") {
     limited = "failed";
-    // A running watcher from an older BloxBot doesn't count changes, and nothing's left to protect.
+    // A running watcher from an older XerBlox doesn't count changes, and nothing's left to protect.
     if (redo === "unknown" || treeVersion === null) {
       await callTool("execute_luau", {
         studio_id: studioId,
@@ -883,7 +883,7 @@ local FROM_TEXT = {
 }
 local function valueFromText(kind, current, text)
   local convert = FROM_TEXT[kind]
-  if not convert then error("BloxBot can't edit this kind of value") end
+  if not convert then error("XerBlox can't edit this kind of value") end
   return convert(current, text)
 end`;
 

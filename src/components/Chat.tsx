@@ -72,7 +72,7 @@ function Chat() {
     if (!import.meta.env.PROD || !POSTHOG_PROJECT_TOKEN) return;
 
     const screenProperties = {
-      $current_url: `bloxbot://app/${appScreen}`,
+      $current_url: `xerblox://app/${appScreen}`,
       $host: "app",
       $pathname: `/${appScreen}`,
       app_screen: appScreen,

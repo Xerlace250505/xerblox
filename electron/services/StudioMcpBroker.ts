@@ -96,14 +96,14 @@ export interface StudioMcpBrokerService {
   readonly status: Effect.Effect<StudioMcpStatus>;
 }
 
-export class StudioMcpBroker extends Context.Tag("@bloxbot/StudioMcpBroker")<
+export class StudioMcpBroker extends Context.Tag("@xerblox/StudioMcpBroker")<
   StudioMcpBroker,
   StudioMcpBrokerService
 >() {}
 
 class SdkStudioMcpUpstream implements StudioMcpUpstream {
   private readonly client = new Client(
-    { name: "BloxBot", version: "1.0.0" },
+    { name: "XerBlox", version: "1.0.0" },
     { capabilities: {} },
   );
 
@@ -437,7 +437,7 @@ export async function startStudioMcpBroker(
   >();
   function makeSession() {
     const server = new Server(
-      { name: "bloxbot-studio-broker", version: "1.0.0" },
+      { name: "xerblox-studio-broker", version: "1.0.0" },
       { capabilities: { tools: { listChanged: true } } },
     );
     server.setRequestHandler(ListToolsRequestSchema, () => upstream.listTools());
@@ -534,7 +534,7 @@ export function makeStudioMcpBrokerLayer(options: StudioMcpBrokerOptions) {
       yield* Effect.tryPromise({
         try: () => mkdir(options.workspace, { recursive: true }),
         catch: (cause) =>
-          new StudioMcpBrokerError({ message: "Failed to create the BloxBot workspace", cause }),
+          new StudioMcpBrokerError({ message: "Failed to create the XerBlox workspace", cause }),
       });
       // Found again on every attempt, so a Studio update between attempts is picked up.
       const connection = new StudioMcpConnection(async () =>

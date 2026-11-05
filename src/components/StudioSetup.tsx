@@ -35,7 +35,7 @@ const STEPS = [
 
 const PROBLEM_COPY: Record<StudioMcpProblem, string> = {
   not_installed:
-    "BloxBot can't find Roblox Studio's MCP helper. Install or update Roblox Studio, open it, turn on the MCP server in Assistant settings, then check again.",
+    "XerBlox can't find Roblox Studio's MCP helper. Install or update Roblox Studio, open it, turn on the MCP server in Assistant settings, then check again.",
   unavailable:
     "Studio's MCP helper stopped right after it started. Open Roblox Studio so it can finish any update, then check again. If this keeps happening, reinstall Studio.",
 };
@@ -43,7 +43,7 @@ const PROBLEM_COPY: Record<StudioMcpProblem, string> = {
 interface StudioSetupProps {
   connected: boolean;
   checking: boolean;
-  /** Set when BloxBot knows why it can't reach Studio's MCP helper. */
+  /** Set when XerBlox knows why it can't reach Studio's MCP helper. */
   problem?: StudioMcpProblem | null;
   onCheck: () => void;
   onContinue: () => void;
@@ -74,7 +74,7 @@ function StudioSetup({ connected, checking, problem, onCheck, onContinue }: Stud
           </div>
           <h1 className="mt-5 text-lg font-medium">Studio connected</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            BloxBot is in the driver&apos;s seat. You&apos;re ready to build.
+            XerBlox is in the driver&apos;s seat. You&apos;re ready to build.
           </p>
           <button
             type="button"
@@ -92,7 +92,7 @@ function StudioSetup({ connected, checking, problem, onCheck, onContinue }: Stud
     <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-6 py-5">
       <section className="animate-fade-in-up w-full max-w-2xl" aria-labelledby="studio-setup-title">
         <header className="flex items-center gap-4">
-          <BloxBotFace />
+          <XerBloxFace />
           <div>
             <p className="text-xs font-medium text-muted-foreground">One tiny setup</p>
             <h1 id="studio-setup-title" className="text-lg font-medium">
@@ -220,7 +220,7 @@ function StudioScreenshot({ step, image, alt }: { step: number; image: string; a
   );
 }
 
-function BloxBotFace() {
+function XerBloxFace() {
   return (
     <svg
       width="52"
@@ -228,12 +228,12 @@ function BloxBotFace() {
       viewBox="0 0 512 512"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="bloxbot-face shrink-0"
+      className="xerblox-face shrink-0"
       aria-hidden="true"
     >
       <rect x="32" y="32" width="448" height="448" rx="112" fill="currentColor" />
       <rect
-        className="bloxbot-eye"
+        className="xerblox-eye"
         x="144"
         y="176"
         width="72"
@@ -242,7 +242,7 @@ function BloxBotFace() {
         fill="var(--background)"
       />
       <rect
-        className="bloxbot-eye"
+        className="xerblox-eye"
         x="296"
         y="176"
         width="72"

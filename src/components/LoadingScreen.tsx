@@ -33,11 +33,11 @@ export interface StartupProgress {
 type UpdateCheckStatus = "idle" | "checking" | "available" | "downloading" | "up-to-date" | "error";
 
 /**
- * Full-screen loading state featuring the animated BloxBot face.
+ * Full-screen loading state featuring the animated XerBlox face.
  * Used during server startup and SDK initialization.
  *
  * When `error` is true, shows a sad face with a "Check for Updates"
- * button and a link to the BloxBot website for support.
+ * button and a link to the XerBlox website for support.
  */
 function LoadingScreen({
   message = "Starting up...",
@@ -101,14 +101,14 @@ function LoadingScreen({
         role={error ? "alert" : undefined}
         aria-live={error ? "assertive" : undefined}
       >
-        {/* BloxBot face  - inline SVG so we can animate individual parts */}
+        {/* XerBlox face  - inline SVG so we can animate individual parts */}
         <svg
           width="80"
           height="80"
           viewBox="0 0 512 512"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className={error ? "" : "bloxbot-face"}
+          className={error ? "" : "xerblox-face"}
           aria-hidden="true"
         >
           {/* Body */}
@@ -124,7 +124,7 @@ function LoadingScreen({
 
           {/* Left eye */}
           <rect
-            className={error ? "" : "bloxbot-eye"}
+            className={error ? "" : "xerblox-eye"}
             x="144"
             y="176"
             width="72"
@@ -135,7 +135,7 @@ function LoadingScreen({
 
           {/* Right eye */}
           <rect
-            className={error ? "" : "bloxbot-eye"}
+            className={error ? "" : "xerblox-eye"}
             x="296"
             y="176"
             width="72"
@@ -293,7 +293,7 @@ function LoadingScreen({
               <span className="text-muted-foreground/40">|</span>
 
               <a
-                href={appLink("https://bloxbot.ai", "loading")}
+                href={appLink("https://xerblox.ai", "loading")}
                 target="_blank"
                 rel="noreferrer"
                 className="underline transition-colors hover:text-foreground"
@@ -335,9 +335,9 @@ function LoadingScreen({
           <StartupAnimationGraphic animation={animation} />
         ) : (
           <div className="mt-4 flex gap-1">
-            <span className="bloxbot-dot h-1 w-1 rounded-full bg-foreground/25" />
-            <span className="bloxbot-dot h-1 w-1 rounded-full bg-foreground/25 [animation-delay:150ms]" />
-            <span className="bloxbot-dot h-1 w-1 rounded-full bg-foreground/25 [animation-delay:300ms]" />
+            <span className="xerblox-dot h-1 w-1 rounded-full bg-foreground/25" />
+            <span className="xerblox-dot h-1 w-1 rounded-full bg-foreground/25 [animation-delay:150ms]" />
+            <span className="xerblox-dot h-1 w-1 rounded-full bg-foreground/25 [animation-delay:300ms]" />
           </div>
         )}
       </div>

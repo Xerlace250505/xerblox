@@ -24,6 +24,7 @@ const api: DesktopApi = {
   openUrl: (url) => ipcRenderer.invoke(channels.openUrl, url),
   loadConfig: () => ipcRenderer.invoke(channels.loadConfig),
   patchConfig: (patch: Partial<AppConfig>) => ipcRenderer.invoke(channels.patchConfig, patch),
+  patchOpenCodeConfig: (patch) => ipcRenderer.invoke(channels.patchOpenCodeConfig, patch),
   setSystemPrompt: (systemPrompt) => ipcRenderer.invoke(channels.setSystemPrompt, systemPrompt),
   checkForUpdate: () => ipcRenderer.invoke(channels.checkForUpdate),
   installUpdate: () => ipcRenderer.invoke(channels.installUpdate),
@@ -62,4 +63,4 @@ const api: DesktopApi = {
   },
 };
 
-contextBridge.exposeInMainWorld("bloxbot", api);
+contextBridge.exposeInMainWorld("xerblox", api);

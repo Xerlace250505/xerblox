@@ -13,7 +13,7 @@ interface SystemNotificationDeps {
 
 const ANSWER_TIMEOUT_MS = 30_000;
 
-/** Resolves to false when the OS won't show it, for example if the user hasn't allowed BloxBot. */
+/** Resolves to false when the OS won't show it, for example if the user hasn't allowed XerBlox. */
 export function createSystemNotifier({
   isSupported,
   create,

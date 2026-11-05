@@ -238,7 +238,7 @@ const ImageLightbox = memo(function ImageLightbox() {
   );
 });
 
-// ── Inline BloxBot thinking indicator ────────────────────────────────────
+// ── Inline XerBlox thinking indicator ────────────────────────────────────
 
 function StudLoader() {
   return (
@@ -252,7 +252,7 @@ function StudLoader() {
 
 const STUDS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-function BloxBotThinking({ label = "Thinking", detail }: { label?: string; detail?: string }) {
+function XerBloxThinking({ label = "Thinking", detail }: { label?: string; detail?: string }) {
   const [seconds, setSeconds] = useState(0);
   useEffect(() => {
     const startedAt = Date.now();
@@ -1132,7 +1132,7 @@ const MessageBubble = memo(function MessageBubble({
             {msg.parts.length === 0 &&
               msg.info.role === "assistant" &&
               !msg.info.error &&
-              !msg.info.time.completed && <BloxBotThinking />}
+              !msg.info.time.completed && <XerBloxThinking />}
             {msg.parts.map((part) => (
               <PartRenderer key={part.id} part={part} />
             ))}
@@ -1162,10 +1162,10 @@ const BusyThinkingIndicator = memo(function BusyThinkingIndicator({
   lastMessage: MessageWithParts | undefined;
 }) {
   if (status?.type === "retry") {
-    return <BloxBotThinking label="Waiting to retry" detail={status.message} />;
+    return <XerBloxThinking label="Waiting to retry" detail={status.message} />;
   }
   if (status?.type !== "busy" || !lastMessage || lastMessage.info.role !== "user") return null;
-  return <BloxBotThinking />;
+  return <XerBloxThinking />;
 });
 
 function ChatMessages() {

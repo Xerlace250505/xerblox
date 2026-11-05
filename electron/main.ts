@@ -47,7 +47,7 @@ const defaultConfig: AppConfig = DEFAULT_APP_CONFIG;
 const configMutex = Effect.unsafeMakeSemaphore(1);
 
 function configPath(): string {
-  return join(app.getPath("userData"), "bloxbot-store.json");
+  return join(app.getPath("userData"), "xerblox-store.json");
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -55,7 +55,7 @@ let quitting = false;
 
 const showSystemNotification = createSystemNotifier({
   isSupported: () => Notification.isSupported(),
-  // BloxBot plays its own sound, if the user wants one.
+  // XerBlox plays its own sound, if the user wants one.
   create: (content) => new Notification({ ...content, silent: true }),
   onClick: (id) => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -104,7 +104,7 @@ class DesktopMainError extends Data.TaggedError("DesktopMainError")<{
 }> {}
 
 const studioMcpBrokerLayer = makeStudioMcpBrokerLayer({
-  workspace: join(app.getPath("home"), "BloxBot"),
+  workspace: join(app.getPath("home"), "XerBlox"),
   localAppData: process.env.LOCALAPPDATA,
   comSpec: process.env.ComSpec,
   systemRoot: process.env.SystemRoot,
@@ -117,7 +117,7 @@ const openCodeBinaryDirectory = join(app.getPath("userData"), "opencode");
 const openCodeRuntime = ManagedRuntime.make(
   makeOpenCodeLayer({
       binaryCacheDirectory: openCodeBinaryDirectory,
-      workspace: join(app.getPath("home"), "BloxBot"),
+      workspace: join(app.getPath("home"), "XerBlox"),
       loadSystemPrompt: () =>
         loadConfig.pipe(
           Effect.map((config) => config.systemPrompt),
@@ -223,7 +223,7 @@ const StudioKeySchema = Schema.String.pipe(Schema.minLength(1), Schema.maxLength
 /** Runs a read against Studio through the broker, keeping Studio's error text for the renderer. */
 // OpenCode runs with XDG_CONFIG_HOME inside the workspace (see services/OpenCode.ts).
 const openCodeConfigDirectory = () =>
-  join(app.getPath("home"), "BloxBot", ".opencode", "config", "opencode");
+  join(app.getPath("home"), "XerBlox", ".opencode", "config", "opencode");
 
 const queryStudio = <A>(query: (callTool: CallStudioTool) => Promise<A>) =>
   openCodeRuntime.runPromise(
@@ -282,6 +282,32 @@ const registerIpcHandlers = Effect.sync(() => {
             writeFile(configFile, withSystemPrompt(await readFile(configFile, "utf8"), systemPrompt)),
           catch: (cause) =>
             new DesktopMainError({ message: "Failed to apply the system prompt", cause }),
+        });
+      }),
+    ),
+  );
+  ipcMain.handle(channels.patchOpenCodeConfig, (_event, patch: unknown) =>
+    runMain(
+      Effect.gen(function* () {
+        if (patch === null || typeof patch !== "object") {
+          return yield* Effect.fail(
+            new DesktopMainError({ message: "OpenCode config patch must be an object" }),
+          );
+        }
+        const configFile = join(openCodeConfigDirectory(), "opencode.json");
+        yield* Effect.tryPromise({
+          try: async () => {
+            let existing: Record<string, unknown> = {};
+            try {
+              existing = JSON.parse(await readFile(configFile, "utf8"));
+            } catch {
+              // File may not exist yet; start fresh
+            }
+            const merged = { ...existing, ...(patch as Record<string, unknown>) };
+            await writeFile(configFile, JSON.stringify(merged, null, 2));
+          },
+          catch: (cause) =>
+            new DesktopMainError({ message: "Failed to patch OpenCode config", cause }),
         });
       }),
     ),
@@ -350,7 +376,7 @@ const registerIpcHandlers = Effect.sync(() => {
     ),
   );
   ipcMain.handle(channels.openNotificationSettings, () => {
-    const url = notificationSettingsUrl(process.platform, "ai.bloxbot.desktop");
+    const url = notificationSettingsUrl(process.platform, "ai.xerblox.desktop");
     return url ? shell.openExternal(url) : undefined;
   });
   ipcMain.handle(channels.showSystemNotification, (_event, input: unknown) =>
@@ -417,7 +443,7 @@ function createWindow(): Effect.Effect<void, DesktopMainError> {
     const window = yield* Effect.try({
       try: () =>
         new BrowserWindow({
-          title: "BloxBot",
+          title: "XerBlox",
           width: 920,
           height: 600,
           minWidth: 520,
@@ -438,7 +464,7 @@ function createWindow(): Effect.Effect<void, DesktopMainError> {
     yield* Effect.sync(() => {
       mainWindow = window;
       window.webContents.setUserAgent(
-        `${window.webContents.getUserAgent()} BloxBot/${app.getVersion()}`,
+        `${window.webContents.getUserAgent()} XerBlox/${app.getVersion()}`,
       );
       window.webContents.setWindowOpenHandler(({ url }) => {
         Effect.runFork(
@@ -487,7 +513,7 @@ function createWindow(): Effect.Effect<void, DesktopMainError> {
 
 const registerAppLifecycle = Effect.sync(() => {
   // Windows drops notifications from an app without this. It matches appId in electron-builder.yml.
-  if (process.platform === "win32") app.setAppUserModelId("ai.bloxbot.desktop");
+  if (process.platform === "win32") app.setAppUserModelId("ai.xerblox.desktop");
 
   app.on("window-all-closed", () =>
     Effect.runSync(

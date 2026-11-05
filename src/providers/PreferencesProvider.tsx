@@ -137,12 +137,12 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setDetailedAnalyticsEnabledState(enabled);
       setDetailedAnalyticsCollection(enabled);
       if (enabled) {
-        notify.message("BloxBot shares AI usage data", {
+        notify.message("XerBlox shares AI usage data", {
           name: "analytics_notice",
           id: "analytics-optout-notice",
           className: "card-toast",
           description:
-            "Your chats and tool activity help improve BloxBot. Details in Settings → Privacy.",
+            "Your chats and tool activity help improve XerBlox. Details in Settings → Privacy.",
           duration: Number.POSITIVE_INFINITY,
           action: {
             label: "Got it",

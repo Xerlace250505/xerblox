@@ -235,8 +235,8 @@ function editErrorMessage(error: unknown): string {
   if (message.includes("That value doesn't fit this field")) {
     return "That value doesn't fit this field.";
   }
-  if (message.includes("BloxBot can't edit this kind of value")) {
-    return "BloxBot can't edit this kind of value yet.";
+  if (message.includes("XerBlox can't edit this kind of value")) {
+    return "XerBlox can't edit this kind of value yet.";
   }
   if (message.includes("This attribute already exists")) return "This attribute already exists.";
   if (!/Found \d+ objects at this path/.test(message)) return "Studio didn't allow this.";

@@ -25,4 +25,5 @@ export const channels = {
   showSystemNotification: "app:show-system-notification",
   systemNotificationClicked: "app:system-notification-clicked",
   openNotificationSettings: "app:open-notification-settings",
+  patchOpenCodeConfig: "config:patch-opencode-config",
 } as const;

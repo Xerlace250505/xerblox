@@ -66,6 +66,7 @@ interface DesktopEffects {
   ) => Effect.Effect<boolean, DesktopError>;
   readonly loadConfig: Effect.Effect<AppConfig, DesktopError>;
   readonly patchConfig: (patch: Partial<AppConfig>) => Effect.Effect<void, DesktopError>;
+  readonly patchOpenCodeConfig: (patch: Record<string, unknown>) => Effect.Effect<void, DesktopError>;
   readonly setSystemPrompt: (systemPrompt: string | null) => Effect.Effect<void, DesktopError>;
   readonly checkForUpdate: Effect.Effect<UpdateInfo | null, DesktopError>;
   readonly installUpdate: Effect.Effect<void, DesktopError>;
@@ -132,6 +133,10 @@ const browserEffects: DesktopEffects = {
           new DesktopError({ message: "Failed to save browser configuration", cause }),
       });
     }),
+  patchOpenCodeConfig: () =>
+    Effect.fail(
+      new DesktopError({ message: "Custom providers require the desktop app." }),
+    ),
   setSystemPrompt: (systemPrompt) => browserEffects.patchConfig({ systemPrompt }),
   checkForUpdate: Effect.succeed(null),
   installUpdate: Effect.fail(
@@ -207,6 +212,8 @@ function makeBridgeEffects(api: DesktopApi): DesktopEffects {
       decodeBridgeValue("Desktop configuration is invalid", AppConfigSchema),
     ),
     patchConfig: (patch) => invoke("Failed to save configuration", () => api.patchConfig(patch)),
+    patchOpenCodeConfig: (patch) =>
+      invoke("Failed to patch OpenCode config", () => api.patchOpenCodeConfig(patch)),
     setSystemPrompt: (systemPrompt) =>
       invoke("Failed to save the system prompt", () => api.setSystemPrompt(systemPrompt)),
     checkForUpdate: invoke("Failed to check for updates", () => api.checkForUpdate()).pipe(
@@ -224,8 +231,8 @@ function makeBridgeEffects(api: DesktopApi): DesktopEffects {
   };
 }
 
-export const desktopEffects: DesktopEffects = window.bloxbot
-  ? makeBridgeEffects(window.bloxbot)
+export const desktopEffects: DesktopEffects = window.xerblox
+  ? makeBridgeEffects(window.xerblox)
   : browserEffects;
 
 const runPromise = <A>(effect: Effect.Effect<A, DesktopError>): Promise<A> =>
@@ -236,9 +243,9 @@ export const desktop: DesktopApi = {
   syncExplorerTree: (studioId, request) =>
     runPromise(desktopEffects.syncExplorerTree(studioId, request)),
   // Trees are large and come from our own main process, so these aren't decoded one by one.
-  onExplorerTreeUpdate: (listener) => window.bloxbot?.onExplorerTreeUpdate(listener) ?? (() => {}),
-  readInstructions: () => window.bloxbot?.readInstructions() ?? Promise.resolve(""),
-  saveInstructions: (text) => window.bloxbot?.saveInstructions(text) ?? Promise.resolve(),
+  onExplorerTreeUpdate: (listener) => window.xerblox?.onExplorerTreeUpdate(listener) ?? (() => {}),
+  readInstructions: () => window.xerblox?.readInstructions() ?? Promise.resolve(""),
+  saveInstructions: (text) => window.xerblox?.saveInstructions(text) ?? Promise.resolve(),
   getExplorerNodeDetails: (studioId, request) =>
     runPromise(desktopEffects.getExplorerNodeDetails(studioId, request)),
   editExplorerObject: (studioId, edit) =>
@@ -247,22 +254,23 @@ export const desktop: DesktopApi = {
   getOpenCodeInstallFolder: () => runPromise(desktopEffects.getOpenCodeInstallFolder),
   getStudioMcpStatus: () => runPromise(desktopEffects.getStudioMcpStatus),
   onOpenCodeStartupProgress: (listener: StartupProgressListener) =>
-    window.bloxbot?.onOpenCodeStartupProgress(listener) ?? (() => {}),
+    window.xerblox?.onOpenCodeStartupProgress(listener) ?? (() => {}),
   getVersion: () => runPromise(desktopEffects.getVersion),
   getInstructionFiles: () => runPromise(desktopEffects.getInstructionFiles),
   openUrl: (url) => runPromise(desktopEffects.openUrl(url)),
   showSystemNotification: (notification) =>
     runPromise(desktopEffects.showSystemNotification(notification)),
   onSystemNotificationClick: (listener) =>
-    window.bloxbot?.onSystemNotificationClick(listener) ?? (() => {}),
-  openNotificationSettings: () => window.bloxbot?.openNotificationSettings() ?? Promise.resolve(),
+    window.xerblox?.onSystemNotificationClick(listener) ?? (() => {}),
+  openNotificationSettings: () => window.xerblox?.openNotificationSettings() ?? Promise.resolve(),
   loadConfig: () => runPromise(desktopEffects.loadConfig),
   patchConfig: (patch) => runPromise(desktopEffects.patchConfig(patch)),
+  patchOpenCodeConfig: (patch) => runPromise(desktopEffects.patchOpenCodeConfig(patch)),
   setSystemPrompt: (systemPrompt) => runPromise(desktopEffects.setSystemPrompt(systemPrompt)),
   checkForUpdate: () => runPromise(desktopEffects.checkForUpdate),
   installUpdate: () => runPromise(desktopEffects.installUpdate),
   relaunch: () => runPromise(desktopEffects.relaunch),
   discoverStudioTargets: () => runPromise(desktopEffects.discoverStudioTargets),
   selectStudioTarget: (targetKey) => runPromise(desktopEffects.selectStudioTarget(targetKey)),
-  onMainError: (listener) => window.bloxbot?.onMainError(listener) ?? (() => {}),
+  onMainError: (listener) => window.xerblox?.onMainError(listener) ?? (() => {}),
 };

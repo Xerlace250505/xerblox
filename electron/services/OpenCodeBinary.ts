@@ -23,7 +23,7 @@ import { PINNED_OPENCODE_RELEASE, type PinnedOpenCodeRelease } from "./openCodeP
 
 const OPEN_CODE_API = "https://api.github.com/repos/anomalyco/opencode/releases";
 const OPEN_CODE_DOWNLOAD_PREFIX = "https://github.com/anomalyco/opencode/releases/download/";
-// OpenCode's API isn't stable across minor releases and ships several times a week, so BloxBot
+// OpenCode's API isn't stable across minor releases and ships several times a week, so XerBlox
 // follows patches of the line its client was built against. Update `@opencode/client` to move on.
 const SUPPORTED_MAJOR = 2;
 const SUPPORTED_MINOR = 2;
@@ -403,7 +403,7 @@ function findCompatibleRelease(fetchFn: Fetch, archiveName: string) {
         const response = await fetchFn(`${OPEN_CODE_API}?per_page=${RELEASES_PER_PAGE}`, {
           headers: {
             Accept: "application/vnd.github+json",
-            "User-Agent": "BloxBot",
+            "User-Agent": "XerBlox",
             "X-GitHub-Api-Version": "2022-11-28",
           },
           signal: AbortSignal.any([signal, AbortSignal.timeout(LOOKUP_TIMEOUT_MS)]),
@@ -976,7 +976,7 @@ export function ensureOpenCodeBinary(
       );
 
     // Newer releases come from the API. When it fails (rate limit, timeout, DNS), a cached
-    // copy or the pinned release keeps BloxBot working.
+    // copy or the pinned release keeps XerBlox working.
     const updated = yield* Effect.either(
       findCompatibleRelease(fetchFn, spec.archiveName).pipe(
         Effect.flatMap((release) =>

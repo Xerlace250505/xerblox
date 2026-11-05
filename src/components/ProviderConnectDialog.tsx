@@ -555,7 +555,7 @@ function ProviderConnectDialog({ provider, onClose, onConnected }: ProviderConne
             <div className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5">
               <p className="text-sm font-medium">You're proceeding on your own</p>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                BloxBot isn't affiliated with Anthropic. Its terms may limit using Claude plans in
+                XerBlox isn't affiliated with Anthropic. Its terms may limit using Claude plans in
                 other apps, and anything that happens to your account is your responsibility.{" "}
                 <button
                   type="button"
@@ -695,8 +695,8 @@ function DeviceCodeStep({
     <div className="space-y-3">
       <p className="text-xs leading-relaxed text-muted-foreground">
         {host
-          ? `Enter this code on ${host} to approve BloxBot.`
-          : "Enter this code to approve BloxBot."}
+          ? `Enter this code on ${host} to approve XerBlox.`
+          : "Enter this code to approve XerBlox."}
       </p>
       <div className="flex items-center justify-between rounded-lg border px-3 py-2.5">
         <span className="select-all font-mono text-lg font-medium tracking-[0.2em]">{code}</span>

@@ -20,8 +20,8 @@ function displayPath(path: string, home: string): string {
 }
 
 /**
- * The instruction file OpenCode loads for BloxBot. It runs with project config off, so this is the
- * only one, and nothing outside BloxBot's folder is read.
+ * The instruction file OpenCode loads for XerBlox. It runs with project config off, so this is the
+ * only one, and nothing outside XerBlox's folder is read.
  */
 export async function findInstructionFiles(options: {
   globalConfigDirectory: string;

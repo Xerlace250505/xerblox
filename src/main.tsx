@@ -20,7 +20,7 @@ if (import.meta.env.PROD && POSTHOG_PROJECT_TOKEN) {
     // The persisted random device id remains the stable fingerprint.
     person_profiles: "identified_only",
     capture_pageview: false,
-    // BloxBot intentionally contains "bot", which matches PostHog's bot heuristic.
+    // XerBlox intentionally contains "bot", which matches PostHog's bot heuristic.
     opt_out_useragent_filter: true,
     // Unhandled errors and rejections become $exception events for error tracking.
     capture_exceptions: true,
@@ -28,14 +28,14 @@ if (import.meta.env.PROD && POSTHOG_PROJECT_TOKEN) {
     before_send: scrubAnalyticsEvent,
   });
   posthog.register({
-    $current_url: "bloxbot://app/loading",
+    $current_url: "xerblox://app/loading",
     $host: "app",
     $pathname: "/loading",
-    app: "bloxbot",
+    app: "xerblox",
     analytics_schema_version: ANALYTICS_SCHEMA_VERSION,
     analytics_detail_enabled: false,
     app_platform: navigator.platform,
-    app_runtime: window.bloxbot ? "electron" : "browser",
+    app_runtime: window.xerblox ? "electron" : "browser",
     app_screen: "loading",
     app_user_agent: navigator.userAgent,
   });
