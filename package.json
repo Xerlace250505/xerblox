@@ -13,7 +13,7 @@
   "homepage": "https://xerblox.ai",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xerlace/xerblox.git"
+    "url": "https://github.com/Xerlace250505/xerblox.git"
   },
   "scripts": {
     "dev": "vite",

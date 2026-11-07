@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
-const REPOSITORY_URL = "https://github.com/xerlace/xerblox";
+const REPOSITORY_URL = "https://github.com/Xerlace250505/xerblox";
 
 export function releaseAssetNames(version: string): string[] {
   return [

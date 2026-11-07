@@ -1420,7 +1420,7 @@ function AboutTab({ appVersion }: { appVersion: string | null }) {
             Website
           </a>
           <a
-            href="https://github.com/xerlace/xerblox"
+            href="https://github.com/Xerlace250505/xerblox"
             target="_blank"
             rel="noreferrer"
             className="flex h-9 w-full items-center gap-2 rounded-lg border bg-card px-3.5 text-xs transition-colors hover:bg-accent"
