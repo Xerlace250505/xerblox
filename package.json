@@ -10,10 +10,10 @@
     "name": "OscarWoHA",
     "email": "3245494+OscarWoHA@users.noreply.github.com"
   },
-  "homepage": "https://bloxbot.ai",
+  "homepage": "https://xerblox.ai",
   "repository": {
     "type": "git",
-    "url": "https://github.com/paralov/app-bloxbot-ai.git"
+    "url": "https://github.com/xerlace/xerblox.git"
   },
   "scripts": {
     "dev": "vite",

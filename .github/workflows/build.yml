@@ -1,4 +1,4 @@
-name: Build BloxBot
+name: Build XerBlox
 
 on:
   workflow_call:
@@ -69,9 +69,9 @@ jobs:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
-          keychain="$RUNNER_TEMP/bloxbot-signing.keychain-db"
+          keychain="$RUNNER_TEMP/xerblox-signing.keychain-db"
           keychain_password="$(openssl rand -base64 32)"
-          certificate="$RUNNER_TEMP/bloxbot-signing.p12"
+          certificate="$RUNNER_TEMP/xerblox-signing.p12"
           printf '%s' "$APPLE_CERTIFICATE" | base64 --decode > "$certificate"
           security create-keychain -p "$keychain_password" "$keychain"
           security set-keychain-settings -lut 21600 "$keychain"
@@ -150,8 +150,8 @@ jobs:
         if: env.SIGN_WINDOWS == 'true'
         shell: pwsh
         run: |
-          $files = @(Get-ChildItem -Path release -Filter 'BloxBot-Setup-*.exe' -File)
-          $files += Get-Item -Path 'release/win-unpacked/BloxBot.exe'
+          $files = @(Get-ChildItem -Path release -Filter 'XerBlox-Setup-*.exe' -File)
+          $files += Get-Item -Path 'release/win-unpacked/XerBlox.exe'
           if ($files.Count -lt 2) {
             throw "Expected the NSIS installer and the app executable, found: $($files.Name -join ', ')"
           }
@@ -178,6 +178,6 @@ jobs:
       - name: Upload release files
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: bloxbot-${{ matrix.target }}
+          name: xerblox-${{ matrix.target }}
           if-no-files-found: error
           path: staged-release/*

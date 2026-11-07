@@ -35,7 +35,7 @@ const executable = join(bin, process.platform === "win32" ? "opencode.exe" : "op
 appendFileSync(process.env.GITHUB_ENV, `OPENCODE_LIVE_BIN=${executable}\n`);
 console.log(`OpenCode ${tag}: ${executable}`);
 
-// The last release BloxBot shipped on OpenCode 1, for the upgrade test.
+// The last release XerBlox shipped on OpenCode 1, for the upgrade test.
 const V1_TAG = "v1.18.33";
 const V1_RELEASES = {
   "darwin-arm64": ["opencode-darwin-arm64.zip", "24b12873e605b3db3387cb355f43ba7451cd6065c180d8c188663337d2eeb553"],

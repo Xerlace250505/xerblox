@@ -36,7 +36,7 @@ import {
   inspectExplorerNode,
   selectStudioTarget,
 } from "./studioQueries";
-import { withSystemPrompt } from "./opencodeConfig";
+import { mergeOpenCodeConfig, parseOpenCodeConfig, withSystemPrompt } from "./opencodeConfig";
 import { channels } from "./channels";
 import { makeOpenCodeLayer, OpenCode } from "./services/OpenCode";
 import { createSystemNotifier, notificationSettingsUrl } from "./systemNotifications";
@@ -299,11 +299,11 @@ const registerIpcHandlers = Effect.sync(() => {
           try: async () => {
             let existing: Record<string, unknown> = {};
             try {
-              existing = JSON.parse(await readFile(configFile, "utf8"));
+              existing = parseOpenCodeConfig(await readFile(configFile, "utf8"));
             } catch {
               // File may not exist yet; start fresh
             }
-            const merged = { ...existing, ...(patch as Record<string, unknown>) };
+            const merged = mergeOpenCodeConfig(existing, patch as Record<string, unknown>);
             await writeFile(configFile, JSON.stringify(merged, null, 2));
           },
           catch: (cause) =>

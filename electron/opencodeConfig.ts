@@ -49,6 +49,37 @@ export function studioMcpInstallPath(
  */
 export const OPENCODE_ISOLATION_ENV = { OPENCODE_DISABLE_PROJECT_CONFIG: "1" };
 
+type ConfigRecord = Record<string, unknown>;
+
+function isPlainObject(value: unknown): value is ConfigRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Deep-merges a patch over an OpenCode config. Values in the patch win, while
+ * objects already on disk are kept, so a write never drops another custom
+ * provider or unrelated keys.
+ */
+export function mergeOpenCodeConfig(base: unknown, patch: ConfigRecord): ConfigRecord {
+  const merged: ConfigRecord = isPlainObject(base) ? { ...base } : {};
+  for (const [key, value] of Object.entries(patch)) {
+    merged[key] = isPlainObject(value) && isPlainObject(merged[key])
+      ? mergeOpenCodeConfig(merged[key], value)
+      : value;
+  }
+  return merged;
+}
+
+/** Parses a written config, treating malformed or non-object contents as empty. */
+export function parseOpenCodeConfig(contents: string): ConfigRecord {
+  try {
+    const parsed: unknown = JSON.parse(contents);
+    return isPlainObject(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 export function createOpenCodeConfig(broker: { url: string }, systemPrompt?: string | null) {
   return {
     // Keep OpenCode's standard automatic context compaction enabled for long sessions.

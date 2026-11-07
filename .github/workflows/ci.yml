@@ -18,7 +18,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     secrets: inherit
 
-  # Runs OpenCode where BloxBot's users do, with scripted providers so it needs no model or quota.
+  # Runs OpenCode where XerBlox's users do, with scripted providers so it needs no model or quota.
   opencode:
     permissions:
       contents: read

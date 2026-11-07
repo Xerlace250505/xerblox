@@ -1,14 +1,14 @@
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
-const REPOSITORY_URL = "https://github.com/paralov/app-bloxbot-ai";
+const REPOSITORY_URL = "https://github.com/xerlace/xerblox";
 
 export function releaseAssetNames(version: string): string[] {
   return [
-    `BloxBot-${version}-mac.dmg`,
-    `BloxBot-${version}-mac.zip`,
-    `BloxBot-Setup-${version}.exe`,
-    `BloxBot-${version}-linux-amd64.deb`,
+    `XerBlox-${version}-mac.dmg`,
+    `XerBlox-${version}-mac.zip`,
+    `XerBlox-Setup-${version}.exe`,
+    `XerBlox-${version}-linux-amd64.deb`,
     "latest-mac.yml",
     "latest.yml",
     "latest-linux.yml",
@@ -33,7 +33,7 @@ export function releaseNotes(changelog: string, version: string): string {
   const download = `${REPOSITORY_URL}/releases/download/${tag}`;
   const [dmg, , exe, deb] = releaseAssetNames(version);
   return [
-    "## Download BloxBot",
+    "## Download XerBlox",
     "",
     `- [macOS (.dmg)](${download}/${dmg})`,
     `- [Windows (.exe)](${download}/${exe})`,

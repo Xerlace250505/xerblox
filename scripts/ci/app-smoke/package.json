@@ -1,1 +1,1 @@
-{ "name": "bloxbot-app-smoke", "version": "0.0.0", "private": true, "type": "module", "main": "main.mjs" }
+{ "name": "xerblox-app-smoke", "version": "0.0.0", "private": true, "type": "module", "main": "main.mjs" }

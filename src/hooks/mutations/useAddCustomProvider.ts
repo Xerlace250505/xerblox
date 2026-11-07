@@ -15,11 +15,11 @@ export interface CustomProviderInput {
 
 /**
  * Registers a custom OpenAI-compatible provider by writing its configuration
- * into OpenCode's config file via the desktop bridge and setting the API key
- * through the auth endpoint.
+ * into OpenCode's config file via the desktop bridge and connecting its API key.
  *
- * OpenCode supports custom providers via its JSON config under the `provider` key.
- * We write the provider definition there via patchOpenCodeConfig, then set the API key via auth.set.
+ * OpenCode registers a provider (exposed as an integration) from its JSON config
+ * under the top-level `providers` key. Once written, a location reload makes the
+ * new provider available so the key can be connected to it.
  */
 export function useAddCustomProvider() {
   const { client } = useOpenCodeClient();
@@ -29,26 +29,27 @@ export function useAddCustomProvider() {
     mutationFn: async ({ name, baseUrl, apiKey, modelId }: CustomProviderInput) => {
       if (!client) throw new Error("No client");
 
-      // Generate a unique provider ID from the name
-      const providerID = `custom-${name
+      // Generate a unique provider ID from the name.
+      const slug = name
+        .trim()
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "")}`;
+        .replace(/^-|-$/g, "");
+      if (!slug) throw new Error("Use letters or numbers in the provider name.");
+      const providerID = `custom-${slug}`;
 
       // Write the custom provider into OpenCode's config via the desktop bridge.
-      // The main process merges this patch into opencode.json and reloads.
+      // The main process merges this patch into opencode.json.
       await desktop.patchOpenCodeConfig({
-        provider: {
+        providers: {
           [providerID]: {
             name,
-            api: {
-              id: "openai",
-              url: baseUrl,
-              npm: "@ai-sdk/openai",
+            package: "@opencode/ai/providers/openai-compatible",
+            settings: {
+              baseURL: baseUrl.trim().replace(/\/+$/, ""),
             },
             models: {
               [modelId]: {
-                id: modelId,
                 name: modelId,
               },
             },
@@ -56,7 +57,15 @@ export function useAddCustomProvider() {
         },
       });
 
-      // Set the API key for the custom provider
+      // Reload so OpenCode registers the provider before its key is connected.
+      await client.instance.dispose({}, { throwOnError: true });
+
+      // OpenCode's location reload is asynchronous. The first request after the
+      // reload waits for the server to reinitialize and may return stale data, so
+      // warm it up before trying to connect the newly-created integration.
+      await client.provider.list({}, { throwOnError: true });
+
+      // Set the API key for the custom provider.
       await client.auth.set(
         { providerID, auth: { type: "api", key: apiKey } },
         { throwOnError: true },
@@ -64,19 +73,12 @@ export function useAddCustomProvider() {
 
       // Refresh provider list
       try {
-        await client.instance.dispose({}, { throwOnError: true });
-        await client.provider.list({}, { throwOnError: true });
         const [provRes, authRes] = await Promise.all([
           client.provider.list({}, { throwOnError: true }),
-          client.provider
-            .auth({}, { throwOnError: true })
-            .catch(() => ({ data: undefined })),
+          client.provider.auth({}, { throwOnError: true }).catch(() => ({ data: undefined })),
         ]);
-        if (!provRes.data)
-          throw new Error("No provider data after adding custom provider");
-        const merged = authRes.data
-          ? { ...provRes.data, authMethods: authRes.data }
-          : provRes.data;
+        if (!provRes.data) throw new Error("No provider data after adding custom provider");
+        const merged = authRes.data ? { ...provRes.data, authMethods: authRes.data } : provRes.data;
         queryClient.setQueryData(qk.providers, merged);
       } catch {
         await queryClient.invalidateQueries({ queryKey: qk.providers });

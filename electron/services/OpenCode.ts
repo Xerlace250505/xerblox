@@ -1,13 +1,18 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { Context, Data, Duration, Effect, Layer } from "effect";
 import { networkConnections, type Systeminformation } from "systeminformation";
 
 import type { OpenCodeInfo, OpenCodeStartupProgress } from "../../src/types/desktop";
-import { createOpenCodeConfig, OPENCODE_ISOLATION_ENV } from "../opencodeConfig";
+import {
+  createOpenCodeConfig,
+  mergeOpenCodeConfig,
+  OPENCODE_ISOLATION_ENV,
+  parseOpenCodeConfig,
+} from "../opencodeConfig";
 import { loadShellPath } from "../shellEnv";
 import { ensureOpenCodeBinary } from "./OpenCodeBinary";
 import { StudioMcpBroker } from "./StudioMcpBroker";
@@ -299,12 +304,20 @@ function prepareOpenCode(
       { concurrency: "unbounded", discard: true },
     );
     const systemPrompt = options.loadSystemPrompt ? yield* options.loadSystemPrompt() : null;
-    const config = createOpenCodeConfig(broker.info, systemPrompt);
-    yield* fileOperation("Failed to write the OpenCode configuration", () =>
-      writeFile(
-        join(configDirectory, "opencode.json"),
-        JSON.stringify(config, null, 2),
+    const configFile = join(configDirectory, "opencode.json");
+    // Keep what the user added, such as custom providers, and layer the
+    // generated defaults over it. Otherwise every launch would reset them.
+    const existing = yield* Effect.option(
+      fileOperation("Failed to read the OpenCode configuration", () =>
+        readFile(configFile, "utf8"),
       ),
+    );
+    const config = mergeOpenCodeConfig(
+      existing._tag === "Some" ? parseOpenCodeConfig(existing.value) : {},
+      createOpenCodeConfig(broker.info, systemPrompt),
+    );
+    yield* fileOperation("Failed to write the OpenCode configuration", () =>
+      writeFile(configFile, JSON.stringify(config, null, 2)),
     );
 
     const password = yield* Effect.try({
