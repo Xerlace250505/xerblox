@@ -312,6 +312,61 @@ const registerIpcHandlers = Effect.sync(() => {
       }),
     ),
   );
+  ipcMain.handle(channels.fetchCustomProviderModels, (_event, input: unknown) =>
+    runMain(
+      Effect.gen(function* () {
+        const { baseUrl, apiKey } = yield* Schema.decodeUnknown(
+          Schema.Struct({ baseUrl: Schema.String, apiKey: Schema.String }),
+        )(input).pipe(
+          Effect.mapError(
+            (cause) => new DesktopMainError({ message: "Custom provider request is invalid", cause }),
+          ),
+        );
+        const endpoint = `${baseUrl.trim().replace(/\/+$/, "")}/models`;
+        const response = yield* Effect.tryPromise({
+          try: () =>
+            fetch(endpoint, {
+              headers: { Accept: "application/json", Authorization: `Bearer ${apiKey}` },
+            }),
+          catch: (cause) =>
+            new DesktopMainError({ message: "Could not reach the custom provider", cause }),
+        });
+        if (!response.ok) {
+          return yield* Effect.fail(
+            new DesktopMainError({
+              message: `Custom provider returned HTTP ${response.status}`,
+            }),
+          );
+        }
+        const body: unknown = yield* Effect.tryPromise({
+          try: () => response.json(),
+          catch: (cause) =>
+            new DesktopMainError({ message: "Custom provider returned invalid JSON", cause }),
+        });
+        const entries =
+          Array.isArray(body) ? body : body && typeof body === "object" && "data" in body ? body.data : null;
+        if (!Array.isArray(entries)) {
+          return yield* Effect.fail(
+            new DesktopMainError({ message: "Custom provider returned no model list" }),
+          );
+        }
+        const models = entries.flatMap((entry) => {
+          if (!entry || typeof entry !== "object" || !("id" in entry) || typeof entry.id !== "string") {
+            return [];
+          }
+          const id = entry.id.trim();
+          return id ? [{ id, name: "name" in entry && typeof entry.name === "string" ? entry.name : id }] : [];
+        });
+        const unique = [...new Map(models.map((model) => [model.id, model])).values()];
+        if (unique.length === 0) {
+          return yield* Effect.fail(
+            new DesktopMainError({ message: "Custom provider returned no usable models" }),
+          );
+        }
+        return unique;
+      }),
+    ),
+  );
   // A newer read replaces one still running, so a closed place doesn't keep Studio busy.
   let explorerTreeRead: AbortController | null = null;
   ipcMain.handle(channels.syncExplorerTree, (event, studioId: unknown, request: unknown) =>

@@ -10,7 +10,7 @@ export interface CustomProviderInput {
   name: string;
   baseUrl: string;
   apiKey: string;
-  modelId: string;
+  models: ReadonlyArray<{ id: string; name: string }>;
 }
 
 /**
@@ -26,7 +26,7 @@ export function useAddCustomProvider() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ name, baseUrl, apiKey, modelId }: CustomProviderInput) => {
+    mutationFn: async ({ name, baseUrl, apiKey, models }: CustomProviderInput) => {
       if (!client) throw new Error("No client");
 
       // Generate a unique provider ID from the name.
@@ -48,11 +48,7 @@ export function useAddCustomProvider() {
             settings: {
               baseURL: baseUrl.trim().replace(/\/+$/, ""),
             },
-            models: {
-              [modelId]: {
-                name: modelId,
-              },
-            },
+            models: Object.fromEntries(models.map((model) => [model.id, { name: model.name }])),
           },
         },
       });

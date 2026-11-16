@@ -168,6 +168,10 @@ export interface DesktopApi {
   patchConfig(patch: Partial<AppConfig>): Promise<void>;
   /** Merges a patch into OpenCode's opencode.json config file (for custom providers). */
   patchOpenCodeConfig(patch: Record<string, unknown>): Promise<void>;
+  fetchCustomProviderModels(
+    baseUrl: string,
+    apiKey: string,
+  ): Promise<readonly { id: string; name: string }[]>;
   setSystemPrompt(systemPrompt: string | null): Promise<void>;
   checkForUpdate(): Promise<UpdateInfo | null>;
   installUpdate(): Promise<void>;

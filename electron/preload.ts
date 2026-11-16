@@ -25,6 +25,8 @@ const api: DesktopApi = {
   loadConfig: () => ipcRenderer.invoke(channels.loadConfig),
   patchConfig: (patch: Partial<AppConfig>) => ipcRenderer.invoke(channels.patchConfig, patch),
   patchOpenCodeConfig: (patch) => ipcRenderer.invoke(channels.patchOpenCodeConfig, patch),
+  fetchCustomProviderModels: (baseUrl, apiKey) =>
+    ipcRenderer.invoke(channels.fetchCustomProviderModels, { baseUrl, apiKey }),
   setSystemPrompt: (systemPrompt) => ipcRenderer.invoke(channels.setSystemPrompt, systemPrompt),
   checkForUpdate: () => ipcRenderer.invoke(channels.checkForUpdate),
   installUpdate: () => ipcRenderer.invoke(channels.installUpdate),

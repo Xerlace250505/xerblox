@@ -1,6 +1,7 @@
-import { X } from "lucide-react";
+import { Loader2, RefreshCw, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAddCustomProvider } from "@/hooks/mutations/useAddCustomProvider";
+import { desktop } from "@/lib/desktop";
 import { notify } from "@/lib/notifications";
 
 interface CustomProviderDialogProps {
@@ -13,6 +14,10 @@ function CustomProviderDialog({ onClose, onAdded }: CustomProviderDialogProps) {
   const [baseUrl, setBaseUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [modelId, setModelId] = useState("");
+  const [fetchedModels, setFetchedModels] = useState<ReadonlyArray<{ id: string; name: string }>>(
+    [],
+  );
+  const [fetchingModels, setFetchingModels] = useState(false);
   const [saving, setSaving] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -24,29 +29,49 @@ function CustomProviderDialog({ onClose, onAdded }: CustomProviderDialogProps) {
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") close();
     }
-    function handleClick(e: MouseEvent) {
-      if (dialogRef.current && !dialogRef.current.contains(e.target as Node)) close();
-    }
     document.addEventListener("keydown", handleKey);
-    document.addEventListener("mousedown", handleClick);
     return () => {
       document.removeEventListener("keydown", handleKey);
-      document.removeEventListener("mousedown", handleClick);
     };
   }, [close]);
 
   const addMutation = useAddCustomProvider();
 
+  async function fetchModels() {
+    if (!baseUrl.trim() || !apiKey.trim()) return;
+    setFetchingModels(true);
+    try {
+      const models = await desktop.fetchCustomProviderModels(
+        baseUrl.trim().replace(/\/+$/, ""),
+        apiKey.trim(),
+      );
+      setFetchedModels(models);
+      setModelId(models[0]?.id ?? "");
+      notify.success(`Fetched ${models.length} model${models.length === 1 ? "" : "s"}`);
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Failed to fetch models");
+    } finally {
+      setFetchingModels(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !baseUrl.trim() || !apiKey.trim() || !modelId.trim()) return;
+    if (
+      !name.trim() ||
+      !baseUrl.trim() ||
+      !apiKey.trim() ||
+      (!modelId.trim() && fetchedModels.length === 0)
+    )
+      return;
     setSaving(true);
     try {
       await addMutation.mutateAsync({
         name: name.trim(),
         baseUrl: baseUrl.trim().replace(/\/+$/, ""),
         apiKey: apiKey.trim(),
-        modelId: modelId.trim(),
+        models:
+          fetchedModels.length > 0 ? fetchedModels : [{ id: modelId.trim(), name: modelId.trim() }],
       });
       notify.success(`Custom provider "${name.trim()}" added`);
       onAdded();
@@ -59,7 +84,12 @@ function CustomProviderDialog({ onClose, onAdded }: CustomProviderDialogProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) close();
+      }}
+    >
       <div
         ref={dialogRef}
         role="dialog"
@@ -83,7 +113,11 @@ function CustomProviderDialog({ onClose, onAdded }: CustomProviderDialogProps) {
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
           Connect any OpenAI-compatible API endpoint. The base URL should point to the
           <code className="mx-1 rounded bg-muted px-1 font-mono text-[10px]">/v1</code>
-          root (e.g. <code className="rounded bg-muted px-1 font-mono text-[10px]">https://api.example.com/v1</code>).
+          root (e.g.{" "}
+          <code className="rounded bg-muted px-1 font-mono text-[10px]">
+            https://api.example.com/v1
+          </code>
+          ).
         </p>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-3">
@@ -135,7 +169,7 @@ function CustomProviderDialog({ onClose, onAdded }: CustomProviderDialogProps) {
 
           <div className="space-y-1">
             <label htmlFor="cp-model" className="block text-xs text-muted-foreground">
-              Default Model ID
+              Model ID fallback
             </label>
             <input
               id="cp-model"
@@ -146,11 +180,35 @@ function CustomProviderDialog({ onClose, onAdded }: CustomProviderDialogProps) {
               required
               className="h-8 w-full rounded-md border bg-transparent px-2 font-mono text-xs placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
             />
+            <button
+              type="button"
+              onClick={fetchModels}
+              disabled={fetchingModels || !baseUrl.trim() || !apiKey.trim()}
+              className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-md border text-xs font-medium transition-colors hover:bg-accent disabled:opacity-40"
+            >
+              {fetchingModels ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5" />
+              )}
+              {fetchingModels
+                ? "Fetching models..."
+                : fetchedModels.length > 0
+                  ? `Fetched ${fetchedModels.length} models`
+                  : "Fetch all models"}
+            </button>
           </div>
 
           <button
             type="submit"
-            disabled={saving || !name.trim() || !baseUrl.trim() || !apiKey.trim() || !modelId.trim()}
+            disabled={
+              saving ||
+              fetchingModels ||
+              !name.trim() ||
+              !baseUrl.trim() ||
+              !apiKey.trim() ||
+              (!modelId.trim() && fetchedModels.length === 0)
+            }
             className="h-8 w-full rounded bg-foreground text-xs font-medium text-background transition-opacity disabled:opacity-40"
           >
             {saving ? "Adding..." : "Add Provider"}

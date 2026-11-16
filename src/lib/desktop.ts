@@ -66,7 +66,13 @@ interface DesktopEffects {
   ) => Effect.Effect<boolean, DesktopError>;
   readonly loadConfig: Effect.Effect<AppConfig, DesktopError>;
   readonly patchConfig: (patch: Partial<AppConfig>) => Effect.Effect<void, DesktopError>;
-  readonly patchOpenCodeConfig: (patch: Record<string, unknown>) => Effect.Effect<void, DesktopError>;
+  readonly patchOpenCodeConfig: (
+    patch: Record<string, unknown>,
+  ) => Effect.Effect<void, DesktopError>;
+  readonly fetchCustomProviderModels: (
+    baseUrl: string,
+    apiKey: string,
+  ) => Effect.Effect<readonly { id: string; name: string }[], DesktopError>;
   readonly setSystemPrompt: (systemPrompt: string | null) => Effect.Effect<void, DesktopError>;
   readonly checkForUpdate: Effect.Effect<UpdateInfo | null, DesktopError>;
   readonly installUpdate: Effect.Effect<void, DesktopError>;
@@ -134,8 +140,10 @@ const browserEffects: DesktopEffects = {
       });
     }),
   patchOpenCodeConfig: () =>
+    Effect.fail(new DesktopError({ message: "Custom providers require the desktop app." })),
+  fetchCustomProviderModels: () =>
     Effect.fail(
-      new DesktopError({ message: "Custom providers require the desktop app." }),
+      new DesktopError({ message: "Fetching custom provider models requires the desktop app." }),
     ),
   setSystemPrompt: (systemPrompt) => browserEffects.patchConfig({ systemPrompt }),
   checkForUpdate: Effect.succeed(null),
@@ -214,6 +222,15 @@ function makeBridgeEffects(api: DesktopApi): DesktopEffects {
     patchConfig: (patch) => invoke("Failed to save configuration", () => api.patchConfig(patch)),
     patchOpenCodeConfig: (patch) =>
       invoke("Failed to patch OpenCode config", () => api.patchOpenCodeConfig(patch)),
+    fetchCustomProviderModels: (baseUrl, apiKey) =>
+      invoke("Failed to fetch custom provider models", () =>
+        api.fetchCustomProviderModels(baseUrl, apiKey),
+      ).pipe(
+        decodeBridgeValue(
+          "Custom provider models are invalid",
+          Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String })),
+        ),
+      ),
     setSystemPrompt: (systemPrompt) =>
       invoke("Failed to save the system prompt", () => api.setSystemPrompt(systemPrompt)),
     checkForUpdate: invoke("Failed to check for updates", () => api.checkForUpdate()).pipe(
@@ -266,6 +283,8 @@ export const desktop: DesktopApi = {
   loadConfig: () => runPromise(desktopEffects.loadConfig),
   patchConfig: (patch) => runPromise(desktopEffects.patchConfig(patch)),
   patchOpenCodeConfig: (patch) => runPromise(desktopEffects.patchOpenCodeConfig(patch)),
+  fetchCustomProviderModels: (baseUrl, apiKey) =>
+    runPromise(desktopEffects.fetchCustomProviderModels(baseUrl, apiKey)),
   setSystemPrompt: (systemPrompt) => runPromise(desktopEffects.setSystemPrompt(systemPrompt)),
   checkForUpdate: () => runPromise(desktopEffects.checkForUpdate),
   installUpdate: () => runPromise(desktopEffects.installUpdate),
