@@ -63,6 +63,10 @@ function isPlainObject(value: unknown): value is ConfigRecord {
 export function mergeOpenCodeConfig(base: unknown, patch: ConfigRecord): ConfigRecord {
   const merged: ConfigRecord = isPlainObject(base) ? { ...base } : {};
   for (const [key, value] of Object.entries(patch)) {
+    if (value === null) {
+      delete merged[key];
+      continue;
+    }
     merged[key] = isPlainObject(value) && isPlainObject(merged[key])
       ? mergeOpenCodeConfig(merged[key], value)
       : value;

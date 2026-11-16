@@ -1,5 +1,5 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, ChevronRight, FileText, Globe, Search, Shield } from "lucide-react";
+import { useIsFetching, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building2, ChevronRight, FileText, Globe, RefreshCw, Search, Shield } from "lucide-react";
 import posthog from "posthog-js/dist/module.full.no-external.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CustomProviderDialog from "@/components/CustomProviderDialog";
@@ -7,6 +7,7 @@ import ProviderCheckPopover from "@/components/ProviderCheckPopover";
 import ProviderConnectDialog from "@/components/ProviderConnectDialog";
 import ProviderLogo from "@/components/ProviderLogo";
 import { THEME_OPTIONS, type Theme, useTheme } from "@/components/theme-provider";
+import { useDeleteCustomProvider } from "@/hooks/mutations/useAddCustomProvider";
 import { useCheckProvider } from "@/hooks/mutations/useCheckProvider";
 import { useSaveInstructions } from "@/hooks/mutations/useSaveInstructions";
 import { useSaveSystemPrompt } from "@/hooks/mutations/useSaveSystemPrompt";
@@ -296,10 +297,13 @@ function ProvidersTab() {
   const connectedProviders = useConnectedProviders();
   const authMethods = useAuthMethods();
   const disconnectMutation = useDisconnectProvider();
+  const deleteCustomMutation = useDeleteCustomProvider();
+  const refreshingModels = useIsFetching({ queryKey: qk.providers }) > 0;
 
   const [connecting, setConnecting] = useState<ProviderInfo | null>(null);
   const [showCustomProvider, setShowCustomProvider] = useState(false);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [checks, setChecks] = useState<Record<string, "checking" | ProviderCheckResult>>({});
   const checkMutation = useCheckProvider();
@@ -388,6 +392,20 @@ function ProvidersTab() {
       notify.error("Failed to disconnect");
     } finally {
       setDisconnecting(null);
+    }
+  }
+
+  async function handleDeleteCustom(provider: ProviderInfo) {
+    if (!window.confirm(`Delete custom provider “${provider.name}” and its API key?`)) return;
+    setDeleting(provider.id);
+    try {
+      await deleteCustomMutation.mutateAsync(provider.id);
+      forgetCheck(provider.id);
+      notify.success("Custom provider deleted");
+    } catch {
+      notify.error("Failed to delete custom provider");
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -488,13 +506,25 @@ function ProvidersTab() {
     <div className="mx-auto w-full max-w-md px-4 py-6 @xl:px-6 @xl:py-8">
       <div className="flex items-center justify-between">
         <h4 className="text-lg font-medium text-foreground">Providers</h4>
-        <button
-          type="button"
-          onClick={() => setShowCustomProvider(true)}
-          className="shrink-0 rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        >
-          + Add Custom Endpoint
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => queryClient.invalidateQueries({ queryKey: qk.providers })}
+            disabled={refreshingModels}
+            title="Fetch latest models"
+            aria-label="Fetch latest models"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshingModels ? "animate-spin" : ""}`} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCustomProvider(true)}
+            className="shrink-0 rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            + Add Custom Endpoint
+          </button>
+        </div>
       </div>
 
       {allProviders.length > 0 && (
@@ -592,9 +622,25 @@ function ProvidersTab() {
                       onOpenChange={(open) => setCheckPickerFor(open ? provider.id : null)}
                       onCheck={(model) => runCheck(provider, model)}
                     />
+                    {authMethods[provider.id]?.some((method) => method.type === "api") && (
+                      <button
+                        onClick={() => setConnecting(provider)}
+                        className="shrink-0 whitespace-nowrap text-xs text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        Change API key
+                      </button>
+                    )}
                     {/* The free models can't be disconnected, and BloxBot can't
                         remove a Zen key it didn't store. */}
-                    {isFreeZen(provider) || hasOutsideZenKey(provider) ? null : (
+                    {provider.id.startsWith("custom-") ? (
+                      <button
+                        onClick={() => handleDeleteCustom(provider)}
+                        disabled={deleting === provider.id}
+                        className="shrink-0 whitespace-nowrap text-xs text-muted-foreground transition-colors hover:text-red-600 disabled:opacity-50"
+                      >
+                        {deleting === provider.id ? "..." : "Delete"}
+                      </button>
+                    ) : isFreeZen(provider) || hasOutsideZenKey(provider) ? null : (
                       <button
                         onClick={() => handleDisconnect(provider)}
                         disabled={disconnecting === provider.id}

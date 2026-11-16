@@ -97,3 +97,29 @@ export function useAddCustomProvider() {
     },
   });
 }
+
+/** Removes a custom provider's credential and its OpenCode config entry. */
+export function useDeleteCustomProvider() {
+  const { client } = useOpenCodeClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (providerID: string) => {
+      if (!client) throw new Error("No client");
+      try {
+        await client.auth.remove({ providerID }, { throwOnError: true });
+      } catch {
+        // It may already be disconnected; still remove the config entry.
+      }
+      await desktop.patchOpenCodeConfig({ providers: { [providerID]: null } });
+      try {
+        await client.instance.dispose({}, { throwOnError: true });
+        await client.provider.list({}, { throwOnError: true });
+      } catch {
+        // The invalidation below retries the provider refresh.
+      }
+      await queryClient.invalidateQueries({ queryKey: qk.providers });
+      return providerID;
+    },
+  });
+}
